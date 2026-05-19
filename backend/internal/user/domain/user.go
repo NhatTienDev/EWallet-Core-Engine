@@ -28,8 +28,8 @@ type UserRepository interface {
 }
 
 // Usecase interface
-type UserUsecase interface {
+type UserUseCase interface {
 	Register(ctx context.Context, fullName, email, password string) (*User, error)
-	Login(ctx context.Context, email, password string) (*User, error)
+	Login(ctx context.Context, email, password string) (string, error)
 	GetProfile(ctx context.Context, id int64) (*User, error)
 }
