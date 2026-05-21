@@ -10,7 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtSecretKey = []byte("my_secret_ewallet_key")
 
 func (u *userUseCase) Login(ctx context.Context, email, password string) (string, error) {
 	user, err := u.userRepo.GetByEmail(ctx, email)
@@ -32,7 +31,7 @@ func (u *userUseCase) Login(ctx context.Context, email, password string) (string
 
 	// Generate JWT token and  sign with HS256 algorithm + secret key
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtSecretKey)
+	tokenString, err := token.SignedString(u.jwtSecretKey)
 	if err != nil {
 		return "", domain.ErrInternalServerError
 	}

@@ -27,7 +27,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id int64) (*User, error)
 }
 
-// Usecase interface
+// UseCase interface
 type UserUseCase interface {
 	Register(ctx context.Context, fullName, email, password string) (*User, error)
 	Login(ctx context.Context, email, password string) (string, error)

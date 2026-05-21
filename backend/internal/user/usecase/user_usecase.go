@@ -4,10 +4,12 @@ import "github.com/nhattiendev/ewallet/internal/user/domain"
 
 type userUseCase struct {
 	userRepo domain.UserRepository
+	jwtSecretKey []byte // Receive from main
 }
 
-func NewUserUseCse(userRepo domain.UserRepository) domain.UserUseCase {
+func NewUserUseCse(userRepo domain.UserRepository, jwtSecretKey string) domain.UserUseCase {
 	return &userUseCase{
 		userRepo: userRepo,
+		jwtSecretKey: []byte(jwtSecretKey),
 	}
 }
