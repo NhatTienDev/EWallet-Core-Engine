@@ -18,6 +18,7 @@ var (
 	ErrUserNotFound = errors.New("user not found")
 	ErrEmailAlreadyExist = errors.New("email already exists")
 	ErrInternalServerError = errors.New("internal server error")
+	ErrInvalidCredentials = errors.New("invalid email or password")
 )
 
 // Infrastructure interface

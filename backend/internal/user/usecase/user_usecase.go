@@ -7,7 +7,7 @@ type userUseCase struct {
 	jwtSecretKey []byte // Receive from main
 }
 
-func NewUserUseCse(userRepo domain.UserRepository, jwtSecretKey string) domain.UserUseCase {
+func NewUserUseCase(userRepo domain.UserRepository, jwtSecretKey string) domain.UserUseCase {
 	return &userUseCase{
 		userRepo: userRepo,
 		jwtSecretKey: []byte(jwtSecretKey),

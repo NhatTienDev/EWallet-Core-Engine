@@ -8,6 +8,15 @@ import (
 	"github.com/nhattiendev/ewallet/internal/user/domain"
 )
 
+// @Summary     Get user profile
+// @Tags        Users
+// @Produce     json
+// @Security    BearerAuth
+// @Success     200 {object} apiResponse{data=domain.User} "User profile retrieved successfully"
+// @Failure     401 {object} apiResponse "Unauthorized: Invalid user ID in context"
+// @Failure     404 {object} apiResponse "User not found"
+// @Failure     500 {object} apiResponse "Failed to get user profile"
+// @Router      /api/v1/users/profile [get]
 func (h *UserHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 	userIDContext := r.Context().Value(middleware.UserIDKey)
 

@@ -1,0 +1,151 @@
+basePath: /
+definitions:
+  github_com_nhattiendev_ewallet_internal_user_domain.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+    type: object
+  internal_user_delivery.apiResponse:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  internal_user_delivery.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  internal_user_delivery.registerRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API Documentation for the E-Wallet Core Application.
+  title: E-Wallet Core Engine API
+  version: "1.0"
+paths:
+  /api/v1/users/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_user_delivery.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/internal_user_delivery.apiResponse'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid JSON format
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+        "401":
+          description: Invalid email or password
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+      summary: Login to the system
+      tags:
+      - Users
+  /api/v1/users/profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/internal_user_delivery.apiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_nhattiendev_ewallet_internal_user_domain.User'
+              type: object
+        "401":
+          description: 'Unauthorized: Invalid user ID in context'
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+        "500":
+          description: Failed to get user profile
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - Users
+  /api/v1/users/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Account registration information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_user_delivery.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+        "400":
+          description: Input data error (Invalid JSON format or missing required fields)
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+        "409":
+          description: Email already exists
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_user_delivery.apiResponse'
+      summary: Register a new user account
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer <token>" to authenticate.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

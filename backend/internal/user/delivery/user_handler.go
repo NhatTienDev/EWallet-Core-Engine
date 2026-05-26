@@ -1,6 +1,8 @@
 package delivery
 
 import (
+	"net/http"
+
 	"github.com/nhattiendev/ewallet/internal/user/domain"
 	"github.com/go-chi/chi/v5"
 )
@@ -17,7 +19,7 @@ func NewUserHandler(userUC domain.UserUseCase) *UserHandler {
 
 // Declare API routes for User module
 func (h *UserHandler) RegisterUserRoutes(r chi.Router, authMiddleware func(http.Handler) http.Handler) {
-	r.Route("api/v1/users", func(r chi.Router) {
+	r.Route("/api/v1/users", func(r chi.Router) {
 		r.Post("/register", h.HandleRegister)
 		r.Post("/login", h.HandleLogin)
 

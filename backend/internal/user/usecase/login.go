@@ -10,16 +10,18 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 func (u *userUseCase) Login(ctx context.Context, email, password string) (string, error) {
 	user, err := u.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		return "", domain.ErrUserNotFound
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return "", domain.ErrInvalidCredentials
+		}
+		return "", domain.ErrInternalServerError
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password))
 	if err != nil {
-		return "", errors.New("invalid email or password")
+		return "", domain.ErrInvalidCredentials
 	}
 
 	// Initialize payload for JWT
