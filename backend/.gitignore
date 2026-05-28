@@ -1,7 +1,6 @@
 .env
 .env.*
 *.local
-sqlc.yaml
 
 tmp/
 vendor/
