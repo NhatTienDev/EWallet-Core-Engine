@@ -67,6 +67,7 @@ func (r *walletRepository) ExecTx(ctx context.Context, f func(domain.WalletRepos
         q: qTx,
     }
 
+	// Check result and Commit/Rollback transaction
     err = f(txRepo)
     if err != nil {
         if rbErr := tx.Rollback(); rbErr != nil {
@@ -76,4 +77,21 @@ func (r *walletRepository) ExecTx(ctx context.Context, f func(domain.WalletRepos
     }
 
     return tx.Commit()
+}
+
+func (r *walletRepository) CreateWallet(ctx context.Context, wallet *domain.Wallet) error {
+	arg := sqlc.CreateWalletParams{
+		UserID: wallet.UserID,
+		Balance: wallet.Balance,
+		Currency: wallet.Currency,
+	}
+
+	result, err := r.q.CreateWallet(ctx, arg)
+	if err != nil {
+		return err
+	}
+
+	*wallet = mapToWalletDomain(result)
+	
+	return nil
 }
