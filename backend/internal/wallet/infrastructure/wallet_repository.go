@@ -3,7 +3,7 @@ package infrastructure
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"fmt"
 
 	"github.com/nhattiendev/ewallet/internal/wallet/domain"
 	"github.com/nhattiendev/ewallet/internal/wallet/infrastructure/sqlc"
@@ -50,4 +50,30 @@ func mapToEntryDomain(dbEntry sqlc.Entry) domain.Entry {
 		Amount: dbEntry.Amount,
 		CreatedAt: dbEntry.CreatedAt,
 	}
+}
+
+// ExecTx func implements a block of code (callback) inside DB transaction
+func (r *walletRepository) ExecTx(ctx context.Context, f func(domain.WalletRepository) error) error {
+    // Open a new transaction
+    tx, err := r.db.BeginTx(ctx, nil)
+    if err != nil {
+        return err
+    }
+
+    // WithTx func allows queries to run on transaction instead of connection pool
+    qTx := r.q.WithTx(tx)
+    txRepo := &walletRepository{
+        db: r.db,
+        q: qTx,
+    }
+
+    err = f(txRepo)
+    if err != nil {
+        if rbErr := tx.Rollback(); rbErr != nil {
+            return fmt.Errorf("tx err: %v, rollback err: %v", err, rbErr)
+		}
+        return err
+    }
+
+    return tx.Commit()
 }
