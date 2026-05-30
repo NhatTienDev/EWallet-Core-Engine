@@ -95,3 +95,17 @@ func (r *walletRepository) CreateWallet(ctx context.Context, wallet *domain.Wall
 	
 	return nil
 }
+
+func (r *walletRepository) GetWalletByID(ctx context.Context, id int64) (*domain.Wallet, error) {
+	result, err := r.q.GetWalletByID(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, domain.ErrWalletNotFound
+		}
+		return nil, err
+	}
+
+	wallet := mapToWalletDomain(result)
+	
+	return &wallet, nil
+}
