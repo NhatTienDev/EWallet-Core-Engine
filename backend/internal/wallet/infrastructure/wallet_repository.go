@@ -42,3 +42,12 @@ func mapToTransferDomain(dbTransfer sqlc.Transfer) domain.Transfer {
 		CreatedAt: dbTransfer.CreatedAt,
 	}
 }
+
+func mapToEntryDomain(dbEntry sqlc.Entry) domain.Entry {
+	return domain.Entry{
+		ID: dbEntry.ID,
+		WalletID: dbEntry.WalletID,
+		Amount: dbEntry.Amount,
+		CreatedAt: dbEntry.CreatedAt,
+	}
+}
