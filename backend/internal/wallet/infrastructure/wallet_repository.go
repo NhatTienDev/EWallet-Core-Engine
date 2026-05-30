@@ -120,3 +120,18 @@ func (r *walletRepository) GetWalletByIDForUpdate(ctx context.Context, id int64)
 	wallet := mapToWalletDomain(result)
 	return &wallet, nil
 }
+
+func (r *walletRepository) UpdateWalletBalance(ctx context.Context, walletID int64, amount int64) (*domain.Wallet, error) {
+	arg := sqlc.AddWalletBalanceParams{	
+		ID: walletID,
+		Balance: amount,
+	}
+
+	result, err := r.q.AddWalletBalance(ctx, arg)
+	if err != nil {
+		return nil, err
+	}
+
+	wallet := mapToWalletDomain(result)
+	return &wallet, nil
+}
