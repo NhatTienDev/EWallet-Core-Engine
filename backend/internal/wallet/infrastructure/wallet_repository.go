@@ -135,3 +135,19 @@ func (r *walletRepository) UpdateWalletBalance(ctx context.Context, walletID int
 	wallet := mapToWalletDomain(result)
 	return &wallet, nil
 }
+
+func (r *walletRepository) CreateTransfer(ctx context.Context, transfer *domain.Transfer) error {
+	arg := sqlc.CreateTransferParams{
+		FromWalletID: transfer.FromWalletID,
+		ToWalletID: transfer.ToWalletID,
+		Amount: transfer.Amount,
+	}
+
+	result, err := r.q.CreateTransfer(ctx, arg)
+	if err != nil {
+		return err
+	}
+
+	*transfer = mapToTransferDomain(result)
+	return nil
+}
