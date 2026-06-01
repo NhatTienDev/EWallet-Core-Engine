@@ -186,3 +186,23 @@ func (r *walletRepository) CreateEntry(ctx context.Context, entry *domain.Entry)
 	*entry = mapToEntryDomain(result)
 	return nil
 }
+
+func (r *walletRepository) GetListEntries(ctx context.Context, walletID int64, limit, offset int32) ([]domain.Entry, error) {
+	arg := sqlc.GetListEntriesParams{
+		WalletID: walletID,
+		Limit: limit,
+		Offset: offset,
+	}
+
+	result, err := r.q.GetListEntries(ctx, arg)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]domain.Entry, len(result))
+	for i, e := range result {
+		entries[i] = mapToEntryDomain(e)
+	}
+
+	return entries, nil
+}
