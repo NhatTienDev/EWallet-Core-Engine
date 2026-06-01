@@ -151,3 +151,23 @@ func (r *walletRepository) CreateTransfer(ctx context.Context, transfer *domain.
 	*transfer = mapToTransferDomain(result)
 	return nil
 }
+
+func (r *walletRepository) GetListTransfers(ctx context.Context, walletID int64, limit, offset int32) ([]domain.Transfer, error) {
+	arg := sqlc.GetListTransfersParams{
+		FromWalletID: walletID,
+		Limit: limit,
+		Offset: offset,
+	}
+
+	result, err := r.q.GetListTransfers(ctx, arg)
+	if err != nil {
+		return nil, err
+	}
+
+	transfers := make([]domain.Transfer, len(result))
+	for i, t := range result {
+		transfers[i] = mapToTransferDomain(t)
+	}
+
+	return transfers, nil
+}
