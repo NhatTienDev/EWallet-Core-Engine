@@ -171,3 +171,18 @@ func (r *walletRepository) GetListTransfers(ctx context.Context, walletID int64,
 
 	return transfers, nil
 }
+
+func (r *walletRepository) CreateEntry(ctx context.Context, entry *domain.Entry) error {
+	arg := sqlc.CreateEntryParams{
+		WalletID: entry.WalletID,
+		Amount: entry.Amount,
+	}
+
+	result, err := r.q.CreateEntry(ctx, arg)
+	if err != nil {
+		return err
+	}
+
+	*entry = mapToEntryDomain(result)
+	return nil
+}
