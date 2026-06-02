@@ -6,7 +6,7 @@ import (
 	"github.com/nhattiendev/ewallet/internal/wallet/domain"
 )
 
-func (u *walletUseCase) GetTransferHistory(ctx context.Context, walletID int64, limit, offset int32) ([]domain.Tranfer, error) {
+func (u *walletUseCase) GetTransferHistory(ctx context.Context, walletID int64, limit, offset int32) ([]domain.Transfer, error) {
 	_, err := u.walletRepo.GetWalletByID(ctx, walletID)
 	if err != nil {
 		return nil, err
