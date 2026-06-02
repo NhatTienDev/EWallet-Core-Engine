@@ -73,3 +73,8 @@ func writeJSONWithError(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
+
+func GetUserIDFromContext(ctx context.Context) (int64, bool) {
+	userID, ok := ctx.Value(UserIDKey).(int64)
+	return userID, ok
+}
