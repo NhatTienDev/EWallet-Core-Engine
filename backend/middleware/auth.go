@@ -74,6 +74,7 @@ func writeJSONWithError(w http.ResponseWriter, status int, message string) {
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
 
+// Helper func to get userID safely from context
 func GetUserIDFromContext(ctx context.Context) (int64, bool) {
 	userID, ok := ctx.Value(UserIDKey).(int64)
 	return userID, ok
