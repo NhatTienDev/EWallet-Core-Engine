@@ -6,10 +6,11 @@ import (
 	"errors"
 
 	"github.com/nhattiendev/ewallet/middleware"
+	"github.com/nhattiendev/ewallet/respond"
 	"github.com/nhattiendev/ewallet/internal/wallet/domain"
 )
 
-type createWalletRequest struct {
+type createUserWalletRequest struct {
 	Currency string `json:"currency"`
 }
 
@@ -17,12 +18,13 @@ func (h *WalletHandler) HandleCreateUserWallet(w http.ResponseWriter, r *http.Re
 	// Get uerID safely from token through context
 	authUserID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
+		respond.WriteErrorJSON(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
+		return
 	}
 
-	var req createWalletRequest
+	var req createUserWalletRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		respond.WriteErrorJSON(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
@@ -30,10 +32,11 @@ func (h *WalletHandler) HandleCreateUserWallet(w http.ResponseWriter, r *http.Re
 	wallet, err := h.walletUC.CreateUserWallet(r.Context(), authUserID, req.Currency)
 	if err != nil {
 		if errors.Is(err, domain.ErrWalletAlreadyExists) {
-			respondWithError(w, http.StatusConflict, err.Error())
+			respond.WriteErrorJSON(w, http.StatusConflict, err.Error())
 		}
-		respondWithError(w, http.StatusInternalServerError, "Internal server error")
+		respond.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
+		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, wallet)
+	respond.WriteSuccessJSON(w, http.StatusCreated, "Wallet created successfully", wallet)
 }
