@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/nhattiendev/ewallet/middleware"
-	"github.com/nhattiendev/ewallet/respond"
+	"github.com/nhattiendev/ewallet/response"
 	"github.com/nhattiendev/ewallet/internal/wallet/domain"
 )
 
@@ -14,17 +14,29 @@ type createUserWalletRequest struct {
 	Currency string `json:"currency"`
 }
 
+// @Summary     Create a new wallet for the authenticated user
+// @Tags        Wallets
+// @Accept      json
+// @Produce     json
+// @Security	BearerAuth
+// @Param       request body createUserWalletRequest true "Wallet creation information"
+// @Success     201 {object} response.APIResponse{data=domain.Wallet} "Wallet created successfully"
+// @Failure     400 {object} response.APIResponse "Invalid request payload"
+// @Failure     401 {object} response.APIResponse "Unauthorized"
+// @Failure     409 {object} response.APIResponse "Wallet already exists"
+// @Failure     500 {object} response.APIResponse "Internal server error"
+// @Router      /api/v1/wallets [post]
 func (h *WalletHandler) HandleCreateUserWallet(w http.ResponseWriter, r *http.Request) {
 	// Get uerID safely from token through context
 	authUserID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
-		respond.WriteErrorJSON(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
+		response.WriteErrorJSON(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
 		return
 	}
 
 	var req createUserWalletRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respond.WriteErrorJSON(w, http.StatusBadRequest, "Invalid request payload")
+		response.WriteErrorJSON(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
@@ -32,11 +44,12 @@ func (h *WalletHandler) HandleCreateUserWallet(w http.ResponseWriter, r *http.Re
 	wallet, err := h.walletUC.CreateUserWallet(r.Context(), authUserID, req.Currency)
 	if err != nil {
 		if errors.Is(err, domain.ErrWalletAlreadyExists) {
-			respond.WriteErrorJSON(w, http.StatusConflict, err.Error())
+			response.WriteErrorJSON(w, http.StatusConflict, err.Error())
+			return
 		}
-		respond.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
+		response.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	respond.WriteSuccessJSON(w, http.StatusCreated, "Wallet created successfully", wallet)
+	response.WriteSuccessJSON(w, http.StatusCreated, "Wallet created successfully", wallet)
 }

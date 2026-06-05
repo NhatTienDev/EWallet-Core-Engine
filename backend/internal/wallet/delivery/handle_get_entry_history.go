@@ -7,21 +7,36 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nhattiendev/ewallet/middleware"
-	"github.com/nhattiendev/ewallet/respond"
+	"github.com/nhattiendev/ewallet/response"
 	"github.com/nhattiendev/ewallet/internal/wallet/domain"
 )
 
+// @Summary     Get entry history (statement) for a specific wallet
+// @Tags        Wallets
+// @Accept      json
+// @Produce     json
+// @Security    BearerAuth
+// @Param       id path int true "Wallet ID"
+// @Param       limit query int false "Number of records to return (default 10)"
+// @Param       offset query int false "Number of records to skip (default 0)"
+// @Success     200 {object} response.APIResponse{data=[]domain.Entry} "Get entry history successfully"
+// @Failure     400 {object} response.APIResponse "Invalid wallet ID"
+// @Failure     401 {object} response.APIResponse "Unauthorized"
+// @Failure     403 {object} response.APIResponse "Forbidden: You do not have permission to view this statement"
+// @Failure     404 {object} response.APIResponse "Wallet not found"
+// @Failure     500 {object} response.APIResponse "Internal server error"
+// @Router      /api/v1/wallets/{id}/entries [get]
 func (h *WalletHandler) HandleGetEntryHistory(w http.ResponseWriter, r *http.Request) {
 	authUserID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
-		respond.WriteErrorJSON(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
+		response.WriteErrorJSON(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	walletID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		respond.WriteErrorJSON(w, http.StatusBadRequest, "Invalid wallet ID")
+		response.WriteErrorJSON(w, http.StatusBadRequest, "Invalid wallet ID")
 		return
 	}
 
@@ -29,15 +44,15 @@ func (h *WalletHandler) HandleGetEntryHistory(w http.ResponseWriter, r *http.Req
 	wallet, err := h.walletUC.GetUserWallet(r.Context(), walletID)
 	if err != nil {
 		if errors.Is(err, domain.ErrWalletNotFound) {
-			respond.WriteErrorJSON(w, http.StatusNotFound, err.Error())
+			response.WriteErrorJSON(w, http.StatusNotFound, err.Error())
 			return
 		}
-		respond.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
+		response.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	if wallet.UserID != authUserID {
-		respond.WriteErrorJSON(w, http.StatusForbidden, "You do not have permission to view this statement")
+		response.WriteErrorJSON(w, http.StatusForbidden, "You do not have permission to view this statement")
 		return
 	}
 
@@ -46,9 +61,9 @@ func (h *WalletHandler) HandleGetEntryHistory(w http.ResponseWriter, r *http.Req
 
 	entries, err := h.walletUC.GetEntryHistory(r.Context(), walletID, int32(limit), int32(offset))
 	if err != nil {
-		respond.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
+		response.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	respond.WriteSuccessJSON(w, http.StatusOK, "Get entry history successfully", entries)
+	response.WriteSuccessJSON(w, http.StatusOK, "Get entry history successfully", entries)
 }

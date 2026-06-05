@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/nhattiendev/ewallet/middleware"
-	"github.com/nhattiendev/ewallet/respond"
+	"github.com/nhattiendev/ewallet/response"
 	"github.com/nhattiendev/ewallet/internal/wallet/domain"
 )
 
@@ -16,16 +16,30 @@ type transferMoneyRequest struct {
 	Amount int64 `json:"amount"`
 }
 
+// @Summary     Transfer money between wallets
+// @Tags        Wallets
+// @Accept      json
+// @Produce     json
+// @Security    BearerAuth
+// @Param       request body transferMoneyRequest true "Transfer details (FromWalletID, ToWalletID, Amount)"
+// @Success     200 {object} response.APIResponse{data=domain.Transfer} "Money transferred successfully"
+// @Failure     400 {object} response.APIResponse "Invalid request payload, invalid amount, or self transfer"
+// @Failure     401 {object} response.APIResponse "Unauthorized"
+// @Failure     403 {object} response.APIResponse "Forbidden: You can only transfer money from your own wallet"
+// @Failure     404 {object} response.APIResponse "Source or destination wallet not found"
+// @Failure     422 {object} response.APIResponse "Insufficient balance"
+// @Failure     500 {object} response.APIResponse "Internal server error"
+// @Router      /api/v1/wallets/transfer [post]
 func (h *WalletHandler) HandleTransferMoney(w http.ResponseWriter, r *http.Request) {
 	authUserID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
-		respond.WriteErrorJSON(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
+		response.WriteErrorJSON(w, http.StatusUnauthorized, "Unauthorized: User ID not found in context")
 		return
 	}
 
 	var req transferMoneyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respond.WriteErrorJSON(w, http.StatusBadRequest, "Invalid request payload")
+		response.WriteErrorJSON(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
@@ -33,15 +47,16 @@ func (h *WalletHandler) HandleTransferMoney(w http.ResponseWriter, r *http.Reque
 	fromWallet, err := h.walletUC.GetUserWallet(r.Context(), req.FromWalletID)
 	if err != nil {
 		if errors.Is(err, domain.ErrWalletNotFound) {
-			respond.WriteErrorJSON(w, http.StatusNotFound, "Source wallet not found")
+			response.WriteErrorJSON(w, http.StatusNotFound, "Source wallet not found")
 			return
 		}
-		respond.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
+		response.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	if fromWallet.UserID != authUserID {
-		respond.WriteErrorJSON(w, http.StatusForbidden, "You can only transfer money from your own wallet")
+		response.WriteErrorJSON(w, http.StatusForbidden, "You can only transfer money from your own wallet")
+		return
 	}
 
 	// Transfer money after authorized successfully
@@ -49,16 +64,16 @@ func (h *WalletHandler) HandleTransferMoney(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrSelfTransfer), errors.Is(err, domain.ErrInvalidAmount):
-			respond.WriteErrorJSON(w, http.StatusBadRequest, err.Error())
+			response.WriteErrorJSON(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, domain.ErrInsufficientBalance):
-			respond.WriteErrorJSON(w, http.StatusUnprocessableEntity, err.Error())
+			response.WriteErrorJSON(w, http.StatusUnprocessableEntity, err.Error())
 		case errors.Is(err, domain.ErrWalletNotFound):
-			respond.WriteErrorJSON(w, http.StatusNotFound, "Destination wallet not found")
+			response.WriteErrorJSON(w, http.StatusNotFound, "Destination wallet not found")
 		default:
-			respond.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error") // "Transaction failed. Roll back."
+			response.WriteErrorJSON(w, http.StatusInternalServerError, "Internal server error") // "Transaction failed. Roll back."
 		}
 		return
 	}
 
-	respond.WriteSuccessJSON(w, http.StatusOK, "Money transferred successfully", transfer)
+	response.WriteSuccessJSON(w, http.StatusOK, "Money transferred successfully", transfer)
 }
