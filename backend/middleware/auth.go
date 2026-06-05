@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"context"
-	"encoding/json"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/nhattiendev/ewallet/response"
 )
 
 // Create a custom type to avoid key collision in context
@@ -20,14 +20,14 @@ func AuthMiddleware(jwtSecretKey []byte) func(http.Handler) http.Handler {
 			// Get header authorization
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				writeJSONWithError(w, http.StatusUnauthorized, "Missing Authorization header")
+				response.WriteErrorJSON(w, http.StatusUnauthorized, "Missing Authorization header")
 				return
 			}
 
 			// Seperate "Bearer" from the token string
 			parts := strings.Split(authHeader, " ")
 			if len(parts) != 2 || parts[0] != "Bearer" {
-				writeJSONWithError(w, http.StatusUnauthorized, "Invalid Authorization header format")
+				response.WriteErrorJSON(w, http.StatusUnauthorized, "Invalid Authorization header format")
 				return
 			}
 
@@ -41,20 +41,20 @@ func AuthMiddleware(jwtSecretKey []byte) func(http.Handler) http.Handler {
 			})
 
 			if err != nil || !token.Valid {
-				writeJSONWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+				response.WriteErrorJSON(w, http.StatusUnauthorized, "Invalid or expired token")
 				return
 			}
 
 			// Extract user_id from payload
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok || claims["user_id"] == nil {
-				writeJSONWithError(w, http.StatusUnauthorized, "Invalid token claims")
+				response.WriteErrorJSON(w, http.StatusUnauthorized, "Invalid token claims")
 				return
 			}
 
 			userIDFloat, ok := claims["user_id"].(float64)
 			if !ok {
-				writeJSONWithError(w, http.StatusUnauthorized, "User ID not found in the token")
+				response.WriteErrorJSON(w, http.StatusUnauthorized, "User ID not found in the token")
 				return
 			}
 			userID := int64(userIDFloat)
@@ -66,12 +66,6 @@ func AuthMiddleware(jwtSecretKey []byte) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, reqWithCtx)
 		})
 	}
-}
-
-func writeJSONWithError(w http.ResponseWriter, status int, message string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
 
 // Helper func to get userID safely from context
