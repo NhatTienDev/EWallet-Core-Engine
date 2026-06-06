@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	"github.com/nhattiendev/ewallet/internal/user/domain"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/nhattiendev/ewallet/internal/user/domain"
 )
 
 func (u *userUseCase) Register(ctx context.Context, fullName, email, password string) (*domain.User, error) {
@@ -20,10 +20,14 @@ func (u *userUseCase) Register(ctx context.Context, fullName, email, password st
 	}
 
 	// Call Infrastructure layer to save to PostgreSQL
-	err = u.userRepo.Create(ctx, user)
+	err = u.userRepo.CreateUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}
+
+	go func(id int64) {
+		u.userCreatedChan <- id
+	}(user.ID)
 
 	return user, nil
 }
