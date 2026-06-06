@@ -4,11 +4,11 @@ INSERT INTO wallets (user_id, balance, currency)
 VALUES ($1, $2, $3)
 RETURNING *;
 
--- name: GetWallet :one
+-- name: GetWalletByID :one
 SELECT * FROM wallets
 WHERE id = $1 LIMIT 1;
 
--- name: GetWalletForUpdate :one
+-- name: GetWalletByIDForUpdate :one
 -- FOR NO KEY UPDATE will lock the selected row for update, but allow other transactions to read it. This is useful when we want to update the wallet balance after checking the current balance.
 SELECT * FROM wallets
 WHERE id = $1 LIMIT 1
@@ -16,9 +16,9 @@ FOR NO KEY UPDATE;
 
 -- name: AddWalletBalance :one
 UPDATE wallets
-SET balance = balance + $1,
+SET balance = balance + $2,
     updated_at = NOW()
-WHERE id = $2
+WHERE id = $1
 RETURNING *;
 
 -- Transfer money between 2 wallets
