@@ -44,3 +44,7 @@ SELECT * FROM entries
 WHERE wallet_id = $1
 ORDER BY id DESC
 LIMIT $2 OFFSET $3;
+
+-- name: DeleteWalletByID :exec
+DELETE FROM wallets
+WHERE id = $1 AND user_id = $2;
