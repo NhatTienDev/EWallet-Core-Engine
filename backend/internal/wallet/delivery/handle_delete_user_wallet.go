@@ -11,6 +11,18 @@ import (
 	"github.com/nhattiendev/ewallet/response"
 )
 
+// @Summary     Delete a user wallet
+// @Tags        Wallets
+// @Accept      json
+// @Produce     json
+// @Security	BearerAuth
+// @Param       id path int true "Wallet ID"
+// @Success     200 {object} response.APIResponse "Wallet deleted successfully"
+// @Failure     400 {object} response.APIResponse "Invalid wallet ID or Wallet still has remaining balance"
+// @Failure     401 {object} response.APIResponse "Unauthorized: User ID not found in context"
+// @Failure     404 {object} response.APIResponse "Wallet not found"
+// @Failure     500 {object} response.APIResponse "Internal server error"
+// @Router      /api/v1/wallets/{id} [delete]
 func (h *WalletHandler) HandleDeleteUserWallet(w http.ResponseWriter, r *http.Request) {
 	authUserID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
