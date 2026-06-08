@@ -3,7 +3,8 @@ package infrastructure
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"strings"
+	"errors"
 
 	"github.com/nhattiendev/ewallet/internal/wallet/domain"
 	"github.com/nhattiendev/ewallet/internal/wallet/infrastructure/sqlc"
@@ -71,7 +72,7 @@ func (r *walletRepository) ExecTx(ctx context.Context, f func(domain.WalletRepos
     err = f(txRepo)
     if err != nil {
         if rbErr := tx.Rollback(); rbErr != nil {
-            return fmt.Errorf("tx err: %v, rollback err: %v", err, rbErr)
+            return errors.Join(err, rbErr)
 		}
         return err
     }
@@ -88,6 +89,9 @@ func (r *walletRepository) CreateWallet(ctx context.Context, wallet *domain.Wall
 
 	result, err := r.q.CreateWallet(ctx, arg)
 	if err != nil {
+		if strings.Contains(err.Error(), "23505") || strings.Contains(err.Error(), "duplicate key value") {
+			return domain.ErrWalletAlreadyExists
+		}
 		return err
 	}
 
@@ -134,6 +138,16 @@ func (r *walletRepository) UpdateWalletBalance(ctx context.Context, walletID int
 
 	wallet := mapToWalletDomain(result)
 	return &wallet, nil
+}
+
+func (r *walletRepository) DeleteWalletByID(ctx context.Context, id int64, userID int64) error {
+	arg := sqlc.DeleteWalletByIDParams{
+		ID: id,
+		UserID: userID,
+	}
+
+	err := r.q.DeleteWalletByID(ctx, arg)
+	return err
 }
 
 func (r *walletRepository) CreateTransfer(ctx context.Context, transfer *domain.Transfer) error {
