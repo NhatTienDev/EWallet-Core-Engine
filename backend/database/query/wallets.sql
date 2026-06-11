@@ -45,6 +45,7 @@ WHERE wallet_id = $1
 ORDER BY id DESC
 LIMIT $2 OFFSET $3;
 
--- name: DeleteWalletByID :exec
+-- name: DeleteWalletByID :one
 DELETE FROM wallets
-WHERE id = $1 AND user_id = $2;
+WHERE id = $1 AND user_id = $2
+RETURNING id;
