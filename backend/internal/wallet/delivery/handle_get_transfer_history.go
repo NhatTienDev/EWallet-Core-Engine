@@ -19,12 +19,6 @@ import (
 // @Param       id path int true "Wallet ID"
 // @Param       limit query int false "Number of records to return (default 10)"
 // @Param       offset query int false "Number of records to skip (default 0)"
-// @Success     200 {object} response.APIResponse{data=[]domain.Transfer} "Get transfer history successfully"
-// @Failure     400 {object} response.APIResponse "Invalid wallet ID"
-// @Failure     401 {object} response.APIResponse "Unauthorized"
-// @Failure     403 {object} response.APIResponse "Forbidden: You do not have permission to view this statement"
-// @Failure     404 {object} response.APIResponse "Wallet not found"
-// @Failure     500 {object} response.APIResponse "Internal server error"
 // @Router      /api/v1/wallets/{id}/transfers [get]
 func (h *WalletHandler) HandleGetTransferHistory(w http.ResponseWriter, r *http.Request) {
 	authUserID, ok := middleware.GetUserIDFromContext(r.Context())
@@ -52,7 +46,7 @@ func (h *WalletHandler) HandleGetTransferHistory(w http.ResponseWriter, r *http.
 	}
 
 	if wallet.UserID != authUserID {
-		response.WriteErrorJSON(w, http.StatusForbidden, "You do not have permission to view this statement")
+		response.WriteErrorJSON(w, http.StatusForbidden, "You do not have permission to view this transfer")
 		return
 	}
 

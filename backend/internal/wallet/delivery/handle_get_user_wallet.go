@@ -17,12 +17,6 @@ import (
 // @Produce     json
 // @Security    BearerAuth
 // @Param       id path int true "Wallet ID"
-// @Success     200 {object} response.APIResponse{data=domain.Wallet} "Get wallet successfully"
-// @Failure     400 {object} response.APIResponse "Invalid wallet ID"
-// @Failure     401 {object} response.APIResponse "Unauthorized"
-// @Failure     403 {object} response.APIResponse "Forbidden: You do not have permission to access this wallet"
-// @Failure     404 {object} response.APIResponse "Wallet not found"
-// @Failure     500 {object} response.APIResponse "Internal server error"
 // @Router      /api/v1/wallets/{id} [get]
 func (h *WalletHandler) HandleGetUserWallet(w http.ResponseWriter, r *http.Request) {
 	authUserID, ok := middleware.GetUserIDFromContext(r.Context())

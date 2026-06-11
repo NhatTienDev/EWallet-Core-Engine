@@ -26,10 +26,6 @@ var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2
 // @Accept 		json
 // @Produce 	json
 // @Param 		request body registerRequest true "Account registration information"
-// @Success 	201 {object} response.APIResponse "User registered successfully"
-// @Failure 	400 {object} response.APIResponse "Input data error (Invalid JSON format or missing required fields)"
-// @Failure 	409 {object} response.APIResponse "Email already exists"
-// @Failure 	500 {object} response.APIResponse "Internal server error"
 // @Router 		/api/v1/users/register [post]
 func (h *UserHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest

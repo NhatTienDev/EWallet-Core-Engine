@@ -20,10 +20,6 @@ type loginRequest struct {
 // @Accept      json
 // @Produce     json
 // @Param       request body loginRequest true "Login information"
-// @Success     200 {object} response.APIResponse{data=map[string]string} "Login successfully"
-// @Failure     400 {object} response.APIResponse "Invalid JSON format or missing required fields"
-// @Failure     401 {object} response.APIResponse "Invalid email or password"
-// @Failure     500 {object} response.APIResponse "Internal server error"
 // @Router      /api/v1/users/login [post]
 func (h *UserHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest

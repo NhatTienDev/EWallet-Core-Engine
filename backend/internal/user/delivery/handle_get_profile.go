@@ -13,10 +13,6 @@ import (
 // @Tags        Users
 // @Produce     json
 // @Security	BearerAuth
-// @Success     200 {object} response.APIResponse{data=domain.User} "User profile retrieved successfully"
-// @Failure     401 {object} response.APIResponse "Unauthorized: Invalid user ID in context"
-// @Failure     404 {object} response.APIResponse "User not found"
-// @Failure     500 {object} response.APIResponse "Failed to get user profile"
 // @Router      /api/v1/users/profile [get]
 func (h *UserHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 	userIDContext := r.Context().Value(middleware.UserIDKey)
