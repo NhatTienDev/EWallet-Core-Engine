@@ -1,0 +1,39 @@
+services:
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: ewallet_postgres_db_dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./database/migration/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: ewallet_app_dev
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/tmp
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    ports:
+      - "${BE_PORT}:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres_data_dev:
