@@ -6,23 +6,39 @@ dev:
 sqlc:
 	sqlc generate
 
-# Clean up unnecessary libraries and reformat the go.mod file
-vendor:
+# Clean up unnecessary libraries
+tidy:
 	go mod tidy
+
+# Reformat the go.mod file
+vendor:
 	go mod vendor
 
 # Restart all background processes, read Dockerfile and rebuild the newest image before running (Restore a clean terminal)
-docker-up:
-	docker compose up --build -d
+dev-docker-up:
+	docker compose -f docker-compose.dev.yaml up --build -d
+
 # Stop the system but keep the data in the DB in order to continue coding
-docker-down:
-	docker compose down
-# Stop the system and clear all data in the DB to start over
-docker-clear:
-	docker compose down -v
+dev-docker-down:
+	docker compose -f docker-compose.dev.yaml down
+
 # View real-time logs
-docker-logs:
-	docker compose logs -f
+dev-docker-logs:
+	docker compose -f docker-compose.dev.yaml logs -f
+
+# Stop the system and clear all data in the DB to start over
+dev-docker-clear:
+	docker compose -f docker-compose.dev.yaml down -v
+
+prod-docker-up:
+	docker compose -f docker-compose.prod.yaml up --build -d
+
+prod-docker-down:
+	docker compose -f docker-compose.prod.yaml down
+
+prod-docker-logs:
+	docker compose -f docker-compose.prod.yaml logs -f
+
 # Just build a test Dockerfile to check for compilation errors
-docker-build:
-	docker compose build
+prod-docker-build:
+	docker compose -f docker-compose.prod.yaml build
