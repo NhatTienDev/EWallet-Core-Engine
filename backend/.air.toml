@@ -24,8 +24,8 @@ tmp_dir = "tmp"
   include_file = []
   kill_delay = "0s"
   log = "build-errors.log"
-  poll = false
-  poll_interval = 0
+  poll = true
+  poll_interval = 1000
   post_cmd = []
   pre_cmd = [
     "swag init -g cmd/api/main.go --parseDependency --parseInternal"
@@ -42,7 +42,9 @@ tmp_dir = "tmp"
     entrypoint = ["tmp\\main.exe"]
     full_bin = ""
     post_cmd = []
-    pre_cmd = []
+    pre_cmd = [
+      "swag init -g cmd/api/main.go --parseDependency --parseInternal"
+    ]
 
 [color]
   app = ""
