@@ -150,7 +150,7 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Error: Failed to shutdown server gracefully: %v", err)
+		log.Printf("Error: Failed to shutdown server gracefully: %v", err)
 	}
 
 	log.Println("Waiting for all background workers...")
