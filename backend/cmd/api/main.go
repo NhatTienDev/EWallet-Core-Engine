@@ -1,21 +1,30 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
-	httpSwagger "github.com/swaggo/http-swagger"
 	_ "github.com/lib/pq"
 	_ "github.com/nhattiendev/ewallet/docs"
+	userHandler "github.com/nhattiendev/ewallet/internal/user/delivery"
+	userRepository "github.com/nhattiendev/ewallet/internal/user/infrastructure"
+	userUseCase "github.com/nhattiendev/ewallet/internal/user/usecase"
+	walletHandler "github.com/nhattiendev/ewallet/internal/wallet/delivery"
+	walletRepository "github.com/nhattiendev/ewallet/internal/wallet/infrastructure"
+	walletUseCase "github.com/nhattiendev/ewallet/internal/wallet/usecase"
 	"github.com/nhattiendev/ewallet/middleware"
-	"github.com/nhattiendev/ewallet/internal/user/usecase"
-	"github.com/nhattiendev/ewallet/internal/user/delivery"
-	"github.com/nhattiendev/ewallet/internal/user/infrastructure"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title E-Wallet Core Engine API
@@ -37,11 +46,11 @@ func main() {
 		log.Println("Warning: No .env file found, reading from system env")
 	}
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("BE_PORT")
 	dbURL := os.Getenv("DB_URL")
 	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
 	if port == "" || dbURL == "" || jwtSecretKey == "" {
-		log.Fatal("Error: Missing required environment variables (PORT, DB_URL, JWT_SECRET_KEY)")
+		log.Fatal("Error: Missing required environment variables (BE_PORT, DB_URL, JWT_SECRET_KEY)")
 	}
 
 	// Initialize PostgreSQL connection
@@ -49,7 +58,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: Failed to connect to DB configuration: %v", err)
 	}
-	defer db.Close()
 
 	if err = db.Ping(); err != nil {
 		log.Fatalf("Error: Failed to ping DB, please check password and DB status: %v", err)
@@ -59,9 +67,38 @@ func main() {
 	// Initialize shared middleware
 	authMiddleware := middleware.AuthMiddleware([]byte(jwtSecretKey))
 
-	userRepo := infrastructure.NewUserRepository(db)
-	userUC := usecase.NewUserUseCase(userRepo, jwtSecretKey)
-	userHandler := delivery.NewUserHandler(userUC)
+	userCreatedChan := make(chan int64, 100) // Queue holds up to 100 events
+
+	uRepository := userRepository.NewUserRepository(db)
+	uUseCase := userUseCase.NewUserUseCase(uRepository, jwtSecretKey, userCreatedChan)
+	uHandler := userHandler.NewUserHandler(uUseCase)
+
+	wRepository := walletRepository.NewWalletRepository(db)
+	wUseCase := walletUseCase.NewWalletUseCase(wRepository)
+	wHandler := walletHandler.NewWalletHandler(wUseCase)
+
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		
+		walletUseCase.WalletWorker(ctx, userCreatedChan, wUseCase)
+	}()
+
+	// go func() {
+	// 	<-ctx.Done()
+	// 	log.Println("Shutting down background worker...")
+
+	// 	close(userCreatedChan)
+	// }()
 
 	// General router configuration
 	r := chi.NewRouter()
@@ -75,7 +112,7 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-	
+
 	// Health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -86,12 +123,45 @@ func main() {
 		httpSwagger.URL("http://localhost:"+port+"/swagger/doc.json"),
 	))
 
-	userHandler.RegisterUserRoutes(r, authMiddleware)
+	uHandler.RegisterUserRoutes(r, authMiddleware)
+	wHandler.RegisterWalletRoutes(r, authMiddleware)
 
-	log.Printf("Starting server on port %s...", port)
-	log.Printf("Swagger UI available at http://localhost:%s/swagger/index.html", port)
-	serverAddr := ":" + port
-	if err := http.ListenAndServe(serverAddr, r); err != nil {
-		log.Fatalf("Error: Failed to start server: %v", err)
+	server := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
 	}
+
+	go func() {
+		log.Printf("Starting server on port %s...", port)
+		log.Printf("Swagger UI available at http://localhost:%s/swagger/index.html", port)
+
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Error: Failed to start server: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("Graceful shutdown initiated...")
+
+	shutdownCtx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Error: Failed to shutdown server gracefully: %v", err)
+	}
+
+	log.Println("Waiting for all background workers...")
+
+	wg.Wait()
+
+	log.Println("All background workers stopped")
+
+	if err := db.Close(); err != nil {
+		log.Printf("Error closing database: %v", err)
+	}
+
+	log.Println("Application shutdown completed")
 }
