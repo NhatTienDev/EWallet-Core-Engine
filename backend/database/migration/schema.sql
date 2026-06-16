@@ -35,7 +35,19 @@ CREATE TABLE IF NOT EXISTS entries (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON wallets(user_id);
+-- Table 5 (Password Reset Tokens)
+-- Store hashed tokens to prevent leakage if database is compromised
+CREATE TABLE IF NOT EXISTS password_resets (
+	id BIGSERIAL PRIMARY KEY,
+	user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	hashed_token VARCHAR(255) UNIQUE NOT NULL,
+	is_used BOOLEAN NOT NULL DEFAULT FALSE,
+	expires_at TIMESTAMPTZ NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wallets_user_id_normal ON wallets(user_id);
 CREATE INDEX IF NOT EXISTS idx_transfers_from_wallet_id ON transfers(from_wallet_id);
 CREATE INDEX IF NOT EXISTS idx_transfers_to_wallet_id ON transfers(to_wallet_id);
 CREATE INDEX IF NOT EXISTS idx_entries_wallet_id ON entries(wallet_id);
+CREATE INDEX IF NOT EXISTS idx_password_resets_hashed_token ON password_resets(hashed_token);
