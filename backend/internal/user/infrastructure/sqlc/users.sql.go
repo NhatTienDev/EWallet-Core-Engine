@@ -7,7 +7,34 @@ package sqlc
 
 import (
 	"context"
+	"time"
 )
+
+const createPasswordReset = `-- name: CreatePasswordReset :one
+INSERT INTO password_resets (user_id, hashed_token, expires_at)
+VALUES ($1, $2, $3)
+RETURNING id, user_id, hashed_token, is_used, expires_at, created_at
+`
+
+type CreatePasswordResetParams struct {
+	UserID      int64     `json:"user_id"`
+	HashedToken string    `json:"hashed_token"`
+	ExpiresAt   time.Time `json:"expires_at"`
+}
+
+func (q *Queries) CreatePasswordReset(ctx context.Context, arg CreatePasswordResetParams) (PasswordReset, error) {
+	row := q.db.QueryRowContext(ctx, createPasswordReset, arg.UserID, arg.HashedToken, arg.ExpiresAt)
+	var i PasswordReset
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.HashedToken,
+		&i.IsUsed,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (full_name, email, hashed_password)
@@ -70,11 +97,42 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 	return i, err
 }
 
-const updateUserPassword = `-- name: UpdateUserPassword :one
+const getValidPasswordReset = `-- name: GetValidPasswordReset :one
+SELECT id, user_id, hashed_token, is_used, expires_at, created_at FROM password_resets
+WHERE hashed_token = $1 AND is_used = FALSE AND expires_at > NOW()
+LIMIT 1
+`
+
+// Get token that is not used and not expired
+func (q *Queries) GetValidPasswordReset(ctx context.Context, hashedToken string) (PasswordReset, error) {
+	row := q.db.QueryRowContext(ctx, getValidPasswordReset, hashedToken)
+	var i PasswordReset
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.HashedToken,
+		&i.IsUsed,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const markPasswordResetUsed = `-- name: MarkPasswordResetUsed :exec
+UPDATE password_resets
+SET is_used = TRUE
+WHERE id = $1
+`
+
+func (q *Queries) MarkPasswordResetUsed(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, markPasswordResetUsed, id)
+	return err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
 UPDATE users
 SET hashed_password = $2
 WHERE id = $1
-RETURNING id, full_name, email, hashed_password, created_at
 `
 
 type UpdateUserPasswordParams struct {
@@ -82,15 +140,7 @@ type UpdateUserPasswordParams struct {
 	HashedPassword string `json:"hashed_password"`
 }
 
-func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserPassword, arg.ID, arg.HashedPassword)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.FullName,
-		&i.Email,
-		&i.HashedPassword,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.ID, arg.HashedPassword)
+	return err
 }
