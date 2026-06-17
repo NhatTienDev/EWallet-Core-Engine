@@ -121,3 +121,11 @@ func (r *userRepository) GetValidPasswordReset(ctx context.Context, hashedToken 
 
 	return mapToPasswordResetDomain(dbPasswordReset), nil
 }
+
+func (r *userRepository) MarkPasswordResetUsed(ctx context.Context, id int64) error {
+	err := r.q.MarkPasswordResetUsed(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
