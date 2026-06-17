@@ -109,3 +109,15 @@ func (r *userRepository) CreatePasswordReset(ctx context.Context, reset *domain.
 
 	return nil
 }
+
+func (r *userRepository) GetValidPasswordReset(ctx context.Context, hashedToken string) (*domain.PasswordReset, error) {
+	dbPasswordReset, err := r.q.GetValidPasswordReset(ctx, hashedToken)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, domain.ErrInvalidResetToken
+		}
+		return nil, err
+	}
+
+	return mapToPasswordResetDomain(dbPasswordReset), nil
+}
