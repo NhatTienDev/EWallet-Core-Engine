@@ -91,11 +91,11 @@ func (r *userRepository) GetUserByID(ctx context.Context, id int64) (*domain.Use
 	return mapToUserDomain(dbUser), nil
 }
 
-func (r *userRepository) CreatePasswordReset(ctx context.Context, reset *domain.PasswordReset) error {
+func (r *userRepository) CreatePasswordReset(ctx context.Context, passwordReset *domain.PasswordReset) error {
 	arg := sqlc.CreatePasswordResetParams{
-		UserID: reset.UserID,
-		HashedToken: reset.HashedToken,
-		ExpiresAt: reset.ExpiresAt,
+		UserID: passwordReset.UserID,
+		HashedToken: passwordReset.HashedToken,
+		ExpiresAt: passwordReset.ExpiresAt,
 	}
 
 	dbPasswordReset, err := r.q.CreatePasswordReset(ctx, arg)
@@ -103,9 +103,9 @@ func (r *userRepository) CreatePasswordReset(ctx context.Context, reset *domain.
 		return err
 	}
 
-	reset.ID = dbPasswordReset.ID
-	reset.IsUsed = dbPasswordReset.IsUsed
-	reset.CreatedAt = dbPasswordReset.CreatedAt
+	passwordReset.ID = dbPasswordReset.ID
+	passwordReset.IsUsed = dbPasswordReset.IsUsed
+	passwordReset.CreatedAt = dbPasswordReset.CreatedAt
 
 	return nil
 }
@@ -124,6 +124,19 @@ func (r *userRepository) GetValidPasswordReset(ctx context.Context, hashedToken 
 
 func (r *userRepository) MarkPasswordResetUsed(ctx context.Context, id int64) error {
 	err := r.q.MarkPasswordResetUsed(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) UpdateUserPassword(ctx context.Context, userID int64, newHashedPassword string) error {
+	arg := sqlc.UpdateUserPasswordParams{
+		ID: userID,
+		HashedPassword: newHashedPassword,
+	}
+
+	err := r.q.UpdateUserPassword(ctx, arg)
 	if err != nil {
 		return err
 	}
