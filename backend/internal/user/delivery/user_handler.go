@@ -3,8 +3,8 @@ package delivery
 import (
 	"net/http"
 
-	"github.com/nhattiendev/ewallet/internal/user/domain"
 	"github.com/go-chi/chi/v5"
+	"github.com/nhattiendev/ewallet/internal/user/domain"
 )
 
 type UserHandler struct {
@@ -22,6 +22,8 @@ func (h *UserHandler) RegisterUserRoutes(r chi.Router, authMiddleware func(http.
 	r.Route("/api/v1/users", func(r chi.Router) {
 		r.Post("/register", h.HandleRegister)
 		r.Post("/login", h.HandleLogin)
+		r.Post("/forgot-password", h.HandleForgotPassword)
+		r.Post("/reset-password", h.HandleResetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(authMiddleware)
