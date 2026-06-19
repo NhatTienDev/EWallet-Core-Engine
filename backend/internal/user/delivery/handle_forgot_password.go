@@ -12,6 +12,12 @@ type forgotPasswordRequest struct {
 	Email string `json:"email"`
 }
 
+// @Summary      Request password reset
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request body forgotPasswordRequest true "User's email address"
+// @Router       /api/v1/users/forgot-password [post]
 func (h *UserHandler) HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var req forgotPasswordRequest
 
