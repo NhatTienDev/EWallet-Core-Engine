@@ -37,7 +37,7 @@ type UserRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
 	GetUserByID(ctx context.Context, id int64) (*User, error)
 
-	CreatePasswordReset(ctx context.Context, reset *PasswordReset) error
+	CreatePasswordReset(ctx context.Context, passwordReset *PasswordReset) error
 	GetValidPasswordReset(ctx context.Context, hashedToken string) (*PasswordReset, error)
 	MarkPasswordResetUsed(ctx context.Context, id int64) error
 	UpdateUserPassword(ctx context.Context, userID int64, newHashedPassword string) error
@@ -50,5 +50,5 @@ type UserUseCase interface {
 	GetProfile(ctx context.Context, id int64) (*User, error)
 
 	ForgotPassword(ctx context.Context, email string) error
-	ResetPassword(ctx context.Context, token string, newPassword string) error
+	ResetPassword(ctx context.Context, token, newPassword string) error
 }
