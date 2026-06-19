@@ -23,6 +23,8 @@ services:
       dockerfile: Dockerfile
       target: dev
     container_name: ewallet_app_dev
+    environment:
+      - MAILPIT_SMTP_HOST=mailpit
     env_file:
       - .env
     volumes:
@@ -31,8 +33,18 @@ services:
     depends_on:
       postgres_db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     ports:
       - "${BE_PORT}:8080"
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.15
+    container_name: ewallet_mailpit_dev
+    ports:
+    - "${MAILPIT_SMTP_PORT}:1025"
+    - "${MAILPIT_UI_PORT}:8025"
     restart: unless-stopped
 
 volumes:
