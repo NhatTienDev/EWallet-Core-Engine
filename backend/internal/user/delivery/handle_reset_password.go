@@ -15,6 +15,12 @@ type resetPasswordRequest struct {
 	NewPassword string `json:"new_password"`
 }
 
+// @Summary      Reset to a new password
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request body resetPasswordRequest true "Reset token and new password"
+// @Router       /api/v1/users/reset-password [post]
 func (h *UserHandler) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 	var req resetPasswordRequest
 
