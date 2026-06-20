@@ -1,3 +1,5 @@
+.PHONY: vendor
+
 # Run server with live-reload using Air tool
 dev:
 	air
@@ -42,3 +44,9 @@ prod-docker-logs:
 # Just build a test Dockerfile to check for compilation errors
 prod-docker-build:
 	docker compose -f docker-compose.prod.yaml build
+
+uu-test:
+	go test -v ./internal/user/usecase/
+
+wu-test:
+	go test -v ./internal/wallet/usecase/
