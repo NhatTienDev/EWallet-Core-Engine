@@ -33,24 +33,23 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Download Go modules
-        run: cd backend && go mod download
+        run: go mod download
 
       - name: Install sqlc
         run: |
-          cd backend
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
 
       - name: Generate SQL code
-        run: cd backend && sqlc generate
+        run: sqlc generate
 
       - name: Check gofmt
-        run: cd backend && gofmt -l $(go list ./...)
+        run: gofmt -l $(go list ./...)
 
       - name: Run go vet
-        run: cd backend && go vet ./...
+        run: go vet ./...
 
       - name: Run unit tests
-        run: cd backend && go test ./...
+        run: go test ./...
 
       - name: Build Docker image for production
-        run: cd backend && docker build --target prod -t ewallet-backend:ci .
+        run: docker build --target prod -t ewallet-backend:ci .
