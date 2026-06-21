@@ -35,6 +35,9 @@ jobs:
       - name: Download Go modules
         run: go mod download
 
+      - name: Sync vendor directory
+        run: go mod vendor
+
       - name: Install sqlc
         run: |
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
