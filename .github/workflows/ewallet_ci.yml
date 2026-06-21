@@ -43,7 +43,7 @@ jobs:
         run: sqlc generate
 
       - name: Check gofmt
-        run: gofmt -l $(go list ./...)
+        run: gofmt -l .
 
       - name: Run go vet
         run: go vet ./...
