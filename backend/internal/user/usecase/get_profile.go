@@ -7,7 +7,7 @@ import (
 )
 
 func (u *userUseCase) GetProfile(ctx context.Context, id int64) (*domain.User, error) {
-	user, err := u.userRepo.GetByID(ctx, id)
+	user, err := u.userRepo.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}

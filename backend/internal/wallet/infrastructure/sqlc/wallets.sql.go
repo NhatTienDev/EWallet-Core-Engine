@@ -11,19 +11,19 @@ import (
 
 const addWalletBalance = `-- name: AddWalletBalance :one
 UPDATE wallets
-SET balance = balance + $1,
+SET balance = balance + $2,
     updated_at = NOW()
-WHERE id = $2
+WHERE id = $1
 RETURNING id, user_id, balance, currency, created_at, updated_at
 `
 
 type AddWalletBalanceParams struct {
-	Balance int64 `json:"balance"`
 	ID      int64 `json:"id"`
+	Balance int64 `json:"balance"`
 }
 
 func (q *Queries) AddWalletBalance(ctx context.Context, arg AddWalletBalanceParams) (Wallet, error) {
-	row := q.db.QueryRowContext(ctx, addWalletBalance, arg.Balance, arg.ID)
+	row := q.db.QueryRowContext(ctx, addWalletBalance, arg.ID, arg.Balance)
 	var i Wallet
 	err := row.Scan(
 		&i.ID,
@@ -113,6 +113,24 @@ func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) (Wal
 	return i, err
 }
 
+const deleteWalletByID = `-- name: DeleteWalletByID :one
+DELETE FROM wallets
+WHERE id = $1 AND user_id = $2
+RETURNING id
+`
+
+type DeleteWalletByIDParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) DeleteWalletByID(ctx context.Context, arg DeleteWalletByIDParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, deleteWalletByID, arg.ID, arg.UserID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getListEntries = `-- name: GetListEntries :many
 SELECT id, wallet_id, amount, created_at FROM entries
 WHERE wallet_id = $1
@@ -196,13 +214,13 @@ func (q *Queries) GetListTransfers(ctx context.Context, arg GetListTransfersPara
 	return items, nil
 }
 
-const getWallet = `-- name: GetWallet :one
+const getWalletByID = `-- name: GetWalletByID :one
 SELECT id, user_id, balance, currency, created_at, updated_at FROM wallets
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetWallet(ctx context.Context, id int64) (Wallet, error) {
-	row := q.db.QueryRowContext(ctx, getWallet, id)
+func (q *Queries) GetWalletByID(ctx context.Context, id int64) (Wallet, error) {
+	row := q.db.QueryRowContext(ctx, getWalletByID, id)
 	var i Wallet
 	err := row.Scan(
 		&i.ID,
@@ -215,15 +233,15 @@ func (q *Queries) GetWallet(ctx context.Context, id int64) (Wallet, error) {
 	return i, err
 }
 
-const getWalletForUpdate = `-- name: GetWalletForUpdate :one
+const getWalletByIDForUpdate = `-- name: GetWalletByIDForUpdate :one
 SELECT id, user_id, balance, currency, created_at, updated_at FROM wallets
 WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE
 `
 
 // FOR NO KEY UPDATE will lock the selected row for update, but allow other transactions to read it. This is useful when we want to update the wallet balance after checking the current balance.
-func (q *Queries) GetWalletForUpdate(ctx context.Context, id int64) (Wallet, error) {
-	row := q.db.QueryRowContext(ctx, getWalletForUpdate, id)
+func (q *Queries) GetWalletByIDForUpdate(ctx context.Context, id int64) (Wallet, error) {
+	row := q.db.QueryRowContext(ctx, getWalletByIDForUpdate, id)
 	var i Wallet
 	err := row.Scan(
 		&i.ID,

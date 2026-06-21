@@ -15,6 +15,15 @@ type Entry struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type PasswordReset struct {
+	ID          int64     `json:"id"`
+	UserID      int64     `json:"user_id"`
+	HashedToken string    `json:"hashed_token"`
+	IsUsed      bool      `json:"is_used"`
+	ExpiresAt   time.Time `json:"expires_at"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 type Transfer struct {
 	ID           int64     `json:"id"`
 	FromWalletID int64     `json:"from_wallet_id"`

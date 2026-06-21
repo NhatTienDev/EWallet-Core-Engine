@@ -45,8 +45,10 @@ prod-docker-logs:
 prod-docker-build:
 	docker compose -f docker-compose.prod.yaml build
 
+# Test all business logic of User module
 uu-test:
 	go test -v ./internal/user/usecase/
 
+# Test all business logic of Wallet module
 wu-test:
 	go test -v ./internal/wallet/usecase/

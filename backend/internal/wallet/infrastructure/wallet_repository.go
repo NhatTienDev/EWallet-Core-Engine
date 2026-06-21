@@ -146,7 +146,11 @@ func (r *walletRepository) DeleteWalletByID(ctx context.Context, id int64, userI
 		UserID: userID,
 	}
 
-	err := r.q.DeleteWalletByID(ctx, arg)
+	_, err := r.q.DeleteWalletByID(ctx, arg)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.ErrWalletNotFound
+	}
 	return err
 }
 

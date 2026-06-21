@@ -30,7 +30,6 @@ func (h *UserHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.Email = strings.TrimSpace(req.Email)
-
 	if req.Email == "" || req.Password == "" {
 		response.WriteErrorJSON(w, http.StatusBadRequest, "Email and password are required")
 		return

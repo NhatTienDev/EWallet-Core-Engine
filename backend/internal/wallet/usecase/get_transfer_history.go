@@ -11,6 +11,6 @@ func (u *walletUseCase) GetTransferHistory(ctx context.Context, walletID int64, 
 	if err != nil {
 		return nil, err
 	}
-
+	
 	return u.walletRepo.GetListTransfers(ctx, walletID, limit, offset)
 }

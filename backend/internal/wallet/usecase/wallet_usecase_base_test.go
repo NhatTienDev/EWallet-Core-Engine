@@ -73,5 +73,11 @@ func (m *MockWalletRepository) GetListEntries(ctx context.Context, walletID int6
 
 func (m *MockWalletRepository) ExecTx(ctx context.Context, f func(domain.WalletRepository) error) error {
 	args := m.Called(ctx, f)
-	return args.Error(0)
+	if err := args.Error(0); err != nil {
+		return err
+	}
+	if f == nil {
+		return nil
+	}
+	return f(m)
 }

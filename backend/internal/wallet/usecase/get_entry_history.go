@@ -11,5 +11,6 @@ func (u *walletUseCase) GetEntryHistory(ctx context.Context, walletID int64, lim
 	if err != nil {
 		return nil, err
 	}
+	
 	return u.walletRepo.GetListEntries(ctx, walletID, limit, offset)
 }

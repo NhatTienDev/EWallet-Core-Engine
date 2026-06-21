@@ -11,7 +11,7 @@ import (
 )
 
 func (u *userUseCase) Login(ctx context.Context, email, password string) (string, error) {
-	user, err := u.userRepo.GetByEmail(ctx, email)
+	user, err := u.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return "", domain.ErrInvalidCredentials

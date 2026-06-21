@@ -46,11 +46,13 @@ func main() {
 		log.Println("Warning: No .env file found, reading from system env")
 	}
 
-	port := os.Getenv("BE_PORT")
+	bePort := os.Getenv("BE_PORT")
 	dbURL := os.Getenv("DB_URL")
 	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
-	if port == "" || dbURL == "" || jwtSecretKey == "" {
-		log.Fatal("Error: Missing required environment variables (BE_PORT, DB_URL, JWT_SECRET_KEY)")
+	mailpitSMTPHost := os.Getenv("MAILPIT_SMTP_HOST")
+	mailpitSMTPPort := os.Getenv("MAILPIT_SMTP_PORT")
+	if bePort == "" || dbURL == "" || jwtSecretKey == "" || mailpitSMTPHost == "" || mailpitSMTPPort == "" {
+		log.Fatal("Error: Missing required environment variables (BE_PORT, DB_URL, JWT_SECRET_KEY, SMTP_HOST, SMTP_PORT)")
 	}
 
 	// Initialize PostgreSQL connection
@@ -69,8 +71,10 @@ func main() {
 
 	userCreatedChan := make(chan int64, 100) // Queue holds up to 100 events
 
+	mailpitSenderRepository := userRepository.NewMailpitSenderRepository(mailpitSMTPHost, mailpitSMTPPort)
+	
 	uRepository := userRepository.NewUserRepository(db)
-	uUseCase := userUseCase.NewUserUseCase(uRepository, jwtSecretKey, userCreatedChan)
+	uUseCase := userUseCase.NewUserUseCase(uRepository, mailpitSenderRepository, jwtSecretKey, userCreatedChan)
 	uHandler := userHandler.NewUserHandler(uUseCase)
 
 	wRepository := walletRepository.NewWalletRepository(db)
@@ -120,21 +124,21 @@ func main() {
 	})
 
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:"+port+"/swagger/doc.json"),
+		httpSwagger.URL("http://localhost:"+bePort+"/swagger/doc.json"),
 	))
 
 	uHandler.RegisterUserRoutes(r, authMiddleware)
 	wHandler.RegisterWalletRoutes(r, authMiddleware)
 
 	server := &http.Server{
-		Addr:    ":" + port,
+		Addr:    ":" + bePort,
 		Handler: r,
 	}
 
 	go func() {
-		log.Printf("Starting server on port %s...", port)
-		log.Printf("Swagger UI available at http://localhost:%s/swagger/index.html", port)
-
+		log.Printf("Starting server on port %s...", bePort)
+		log.Printf("Swagger UI available at http://localhost:%s/swagger/index.html", bePort)
+		log.Printf("Mailpit UI available at http://localhost:%s", os.Getenv("MAILPIT_UI_PORT"))
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("Error: Failed to start server: %v", err)
 		}

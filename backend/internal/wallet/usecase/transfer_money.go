@@ -21,7 +21,7 @@ func (u *walletUseCase) TransferMoney(ctx context.Context, fromWalletID, toWalle
 	err := u.walletRepo.ExecTx(ctx, func(txRepo domain.WalletRepository) error {
 		// Lock account that has smaller ID first to prevent deadlock
 		var fromWallet *domain.Wallet
-		// var toWallet *domain.Wallet
+		var toWallet *domain.Wallet
 		var errGet error
 
 		if fromWalletID < toWalletID {
@@ -31,13 +31,13 @@ func (u *walletUseCase) TransferMoney(ctx context.Context, fromWalletID, toWalle
 				return errGet
 			}
 
-			_, errGet = txRepo.GetWalletByIDForUpdate(ctx, toWalletID)
+			toWallet, errGet = txRepo.GetWalletByIDForUpdate(ctx, toWalletID)
 			if errGet != nil {
 				return errGet
 			}
 		} else {
 			// Lock receiver wallet first, then sender wallet
-			_, errGet = txRepo.GetWalletByIDForUpdate(ctx, toWalletID)
+			toWallet, errGet = txRepo.GetWalletByIDForUpdate(ctx, toWalletID)
 			if errGet != nil {
 				return errGet
 			}
@@ -48,6 +48,10 @@ func (u *walletUseCase) TransferMoney(ctx context.Context, fromWalletID, toWalle
 			}
 		}
 
+		if fromWallet.Currency != toWallet.Currency {
+			return domain.ErrCurrencyMismatch
+		}
+		
 		// Check account balance is sufficient to send money
 		if fromWallet.Balance < amount {
 			return domain.ErrInsufficientBalance

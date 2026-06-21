@@ -12,6 +12,10 @@ func (u *walletUseCase) DeleteUserWallet(ctx context.Context, walletID int64, us
 		return domain.ErrWalletNotFound
 	}
 
+	if wallet.UserID != userID {
+		return domain.ErrForbiddenAccess
+	}
+
 	if wallet.Balance > 0 {
 		return domain.ErrWalletHasRemainingBalance
 	}

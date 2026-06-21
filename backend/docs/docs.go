@@ -15,6 +15,32 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/users/forgot-password": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Request password reset",
+                "parameters": [
+                    {
+                        "description": "User's email address",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_user_delivery.forgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/api/v1/users/login": {
             "post": {
                 "consumes": [
@@ -38,41 +64,7 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "Login successful",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid JSON format",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid email or password",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/api/v1/users/profile": {
@@ -89,44 +81,7 @@ const docTemplate = `{
                     "Users"
                 ],
                 "summary": "Get user profile",
-                "responses": {
-                    "200": {
-                        "description": "User profile retrieved successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/github_com_nhattiendev_ewallet_internal_user_domain.User"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized: Invalid user ID in context",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to get user profile",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/api/v1/users/register": {
@@ -152,61 +107,241 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {
-                    "201": {
-                        "description": "User registered successfully",
+                "responses": {}
+            }
+        },
+        "/api/v1/users/reset-password": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset to a new password",
+                "parameters": [
+                    {
+                        "description": "Reset token and new password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Input data error (Invalid JSON format or missing required fields)",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Email already exists",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_user_delivery.apiResponse"
+                            "$ref": "#/definitions/internal_user_delivery.resetPasswordRequest"
                         }
                     }
-                }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/wallets": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Create a new wallet for the authenticated user",
+                "parameters": [
+                    {
+                        "description": "Wallet creation information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_wallet_delivery.createUserWalletRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/wallets/transfer": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Transfer money between wallets",
+                "parameters": [
+                    {
+                        "description": "Transfer details (FromWalletID, ToWalletID, Amount)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_wallet_delivery.transferMoneyRequest"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/wallets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Get details of a specific wallet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Wallet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Delete a user wallet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Wallet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/wallets/{id}/entries": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Get entry history (statement) for a specific wallet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Wallet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of records to return (default 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of records to skip (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/wallets/{id}/transfers": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Get transfer history for a specific wallet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Wallet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of records to return (default 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of records to skip (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
             }
         }
     },
     "definitions": {
-        "github_com_nhattiendev_ewallet_internal_user_domain.User": {
+        "internal_user_delivery.forgotPasswordRequest": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "full_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_user_delivery.apiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "error": {
-                    "type": "string"
-                },
-                "message": {
                     "type": "string"
                 }
             }
@@ -233,6 +368,39 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "internal_user_delivery.resetPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_wallet_delivery.createUserWalletRequest": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_wallet_delivery.transferMoneyRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "from_wallet_id": {
+                    "type": "integer"
+                },
+                "to_wallet_id": {
+                    "type": "integer"
                 }
             }
         }

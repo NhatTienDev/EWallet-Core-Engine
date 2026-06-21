@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-type apiResponse struct {
+type APIResponse struct {
 	Error string `json:"error,omitempty"`
 	Message string `json:"message,omitempty"`
 	Data any `json:"data,omitempty"`
@@ -16,7 +16,7 @@ func WriteSuccessJSON(w http.ResponseWriter, status int, message string, data an
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
-	res := apiResponse{
+	res := APIResponse{
 		Message: message,
 		Data: data,
 	}
@@ -24,12 +24,12 @@ func WriteSuccessJSON(w http.ResponseWriter, status int, message string, data an
 	json.NewEncoder(w).Encode(res)
 }
 
-func WriteErrorJSON(w http.ResponseWriter, status int, message string) {
+func WriteErrorJSON(w http.ResponseWriter, status int, errorMessage string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
-	res := apiResponse{
-		Message: message,
+	res := APIResponse{
+		Error: errorMessage,
 	}
 
 	json.NewEncoder(w).Encode(res)

@@ -31,12 +31,15 @@ type Entry struct {
 }
 
 var (
-	ErrWalletNotFound = errors.New("wallet not found")
-	ErrInsufficientBalance = errors.New("insufficient balance")
-	ErrInvalidAmount = errors.New("invalid amount")
-	ErrSelfTransfer = errors.New("cannot transfer to the same wallet")
-	ErrWalletAlreadyExists = errors.New("wallet already exists for this user")
-	ErrInternalServerError = errors.New("internal server error")
+	ErrWalletNotFound = errors.New("Wallet not found")
+	ErrInsufficientBalance = errors.New("Insufficient balance")
+	ErrInvalidAmount = errors.New("Invalid amount")
+	ErrSelfTransfer = errors.New("Cannot transfer to the same wallet")
+	ErrWalletAlreadyExists = errors.New("Wallet already exists for this user")
+	ErrInternalServerError = errors.New("Internal server error")
+	ErrCurrencyMismatch = errors.New("Currency mismatch: wallets must use the same currency")
+	ErrWalletHasRemainingBalance = errors.New("Cannot delete wallet with remaining balance. Please withdraw or transfer first")
+	ErrForbiddenAccess = errors.New("You do not have permission to access or modify this wallet")
 )
 
 type WalletRepository interface {
@@ -44,6 +47,7 @@ type WalletRepository interface {
 	GetWalletByID(ctx context.Context, id int64) (*Wallet, error)
 	GetWalletByIDForUpdate(ctx context.Context, id int64) (*Wallet, error)
 	UpdateWalletBalance(ctx context.Context, walletID int64, amount int64) (*Wallet, error)
+	DeleteWalletByID(ctx context.Context, id int64, userID int64) error
 
 	CreateTransfer(ctx context.Context, transfer *Transfer) error
 	GetListTransfers(ctx context.Context, walletID int64, limit, offset int32) ([]Transfer, error)
@@ -52,15 +56,16 @@ type WalletRepository interface {
 	GetListEntries(ctx context.Context, walletID int64, limit, offset int32) ([]Entry, error)
 
 	// The inter-table transaction execution helper function
-	ExecTx(ctx context.Context, f func())
+	ExecTx(ctx context.Context, f func(WalletRepository) error) error
 }
 
 type WalletUseCase interface {
 	CreateUserWallet(ctx context.Context, userID int64, currency string) (*Wallet, error)
 	GetUserWallet(ctx context.Context, walletID int64) (*Wallet, error)
+	DeleteUserWallet(ctx context.Context, walletID int64, userID int64) error
 
 	// Core feature: P2P money transfer with ACID property
-	Transfer(ctx context.Context, fromWalletID, toWalletID, amount int64) (*Transfer, error)
+	TransferMoney(ctx context.Context, fromWalletID, toWalletID, amount int64) (*Transfer, error)
 
 	GetTransferHistory(ctx context.Context, walletID int64, limit, offset int32) ([]Transfer, error)
 	GetEntryHistory(ctx context.Context, walletID int64, limit, offset int32) ([]Entry, error)
