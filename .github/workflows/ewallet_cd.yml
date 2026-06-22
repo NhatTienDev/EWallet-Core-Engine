@@ -1,4 +1,4 @@
-name: EWallet CD
+name: EWallet CD pipeline
 
 on:
   push:
