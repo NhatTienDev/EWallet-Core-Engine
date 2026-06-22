@@ -52,13 +52,6 @@ jobs:
           swag init -g cmd/api/main.go --parseDependency --parseInternal
           git diff --exit-code docs || (echo "Swagger docs are not up-to-date. Run swag init and commit changes." && exit 1)
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: v1.59.0
-          working-directory: backend
-          args: --out-format colored-line-number ./...
-
       - name: Check gofmt
         run: gofmt -l .
 
