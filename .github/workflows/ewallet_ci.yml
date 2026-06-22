@@ -39,12 +39,22 @@ jobs:
       - name: Sync vendor directory
         run: go mod vendor
 
-      - name: Install sqlc
+      - name: Install tools
         run: |
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0
+          go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
       - name: Generate SQL code
         run: sqlc generate
+
+      - name: Generate Swagger docs
+        run: |
+          swag init -g cmd/api/main.go --parseDependency --parseInternal
+          git diff --exit-code docs || (echo "Swagger docs are not up-to-date. Run swag init and commit changes." && exit 1)
+
+      - name: Run golangci-lint
+        run: golangci-lint run ./...
 
       - name: Check gofmt
         run: gofmt -l .
