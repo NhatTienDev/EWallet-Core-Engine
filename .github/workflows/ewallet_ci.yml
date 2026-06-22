@@ -1,4 +1,4 @@
-name: EWallet CI
+name: EWallet CI pipeline
 
 on:
   push:
