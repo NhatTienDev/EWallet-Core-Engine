@@ -1,0 +1,7 @@
+# EWallet-Core-Engine
+
+This project is a backend-intensive e-wallet system built with Go and PostgreSQL, developed with the goal of mastering core backend engineering concepts. It currently handles user authentication with JWT and bcrypt, password recovery via email through Mailpit, wallet management with multiple currencies, and ACID-compliant peer-to-peer money transfers using database transactions with deadlock prevention. A background worker automatically provisions a VND wallet for each new user (I will add region field to create currency unit based on this one), and all business logic is covered by unit tests using testify. Swagger documentation is auto-generated, and the entire stack runs in Docker with CI/CD via GitHub Actions.
+
+In the near future, the backend will be extended with refresh token rotation, rate limiting, structured logging, two-factor authentication, admin APIs, and webhook notifications for transfers. Database migrations will also be formalized with a proper migration tool.
+
+Once the backend is stable and feature-complete, a frontend will be built a React or Next.js web app, possibly complemented by a mobile version using React Native or Flutter, with real-time updates via WebSocket to deliver a full-stack e-wallet experience.
