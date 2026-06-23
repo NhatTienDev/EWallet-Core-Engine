@@ -11,7 +11,7 @@ RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
 CMD ["air", "-c", ".air.toml"]
 
 FROM base AS builder
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -o /app/server ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/server ./cmd/api
 
 FROM alpine:3.20 AS prod
 RUN apk add --no-cache ca-certificates
